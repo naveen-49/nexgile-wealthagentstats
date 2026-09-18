@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#0b1530">
+    <title>Nexgile WealthAgent</title>
+    <link rel="stylesheet" href="/static/styles.css">
+  </head>
+  <body>
+    <main>
+      <section class="login-shell" id="login-view" aria-labelledby="login-title">
+        <div class="brand-panel">
+          <p class="eyebrow">NEXGILE</p>
+          <h1>WealthAgent</h1>
+          <p>See your finances clearly, from everyday cash to your long-term goals.</p>
+        </div>
+        <form class="login-card" id="login-form">
+          <p class="eyebrow">CLIENT PORTAL</p>
+          <h2 id="login-title">Welcome back</h2>
+          <p class="muted">Sign in with your existing client account.</p>
+          <label>Email <input id="email" type="email" autocomplete="email" required placeholder="you@example.com"></label>
+          <label>Password <input id="password" type="password" autocomplete="current-password" required placeholder="Your password"></label>
+          <p id="login-error" class="form-error" role="alert" hidden></p>
+          <button id="login-button" type="submit">Sign in <span aria-hidden="true">→</span></button>
+        </form>
+      </section>
+
+      <section id="dashboard-view" hidden>
+        <header class="topbar">
+          <a class="brand" href="#top" aria-label="Nexgile WealthAgent home">NEXGILE <span>WealthAgent</span></a>
+          <div class="topbar-actions"><span id="client-name"></span><button class="text-button" id="logout-button">Sign out</button></div>
+        </header>
+        <div id="top" class="dashboard-shell">
+          <div class="dashboard-heading">
+            <div><p class="eyebrow">CLIENT OVERVIEW</p><h1 id="greeting">Your financial picture</h1><p class="muted">Live information from your Nexgile account.</p></div>
+            <button class="secondary-button" id="refresh-button">Refresh data</button>
+          </div>
+          <p id="dashboard-error" class="form-error" role="alert" hidden></p>
+          <div class="summary-grid" id="summary-cards" aria-live="polite"></div>
+          <div class="content-grid">
+            <section class="panel holdings-panel"><div class="panel-title"><div><p class="eyebrow">PORTFOLIO</p><h2>Holdings</h2></div><span id="holding-count" class="count-badge">0 assets</span></div><div class="table-wrap"><table><thead><tr><th>Asset</th><th>Quantity</th><th>Avg. cost</th><th>Current price</th><th>Value</th></tr></thead><tbody id="holdings-body"></tbody></table></div></section>
+            <section class="panel risk-panel"><p class="eyebrow">RISK PROFILE</p><h2>Your investment style</h2><div id="risk-content"></div></section>
+            <section class="panel goals-panel"><div class="panel-title"><div><p class="eyebrow">FINANCIAL GOALS</p><h2>Goals in progress</h2></div></div><div id="goals-list" class="stack-list"></div></section>
+            <section class="panel transactions-panel"><div class="panel-title"><div><p class="eyebrow">ACTIVITY</p><h2>Recent transactions</h2></div></div><div id="transactions-list" class="stack-list"></div></section>
+          </div>
+        </div>
+      </section>
+    </main>
+    <template id="empty-state"><p class="empty-state">No information is available yet.</p></template>
+    <script src="/static/app.js" defer></script>
+  </body>
+</html>
