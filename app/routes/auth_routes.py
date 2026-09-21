@@ -6,7 +6,6 @@ from flask_jwt_extended import (
     get_jwt_identity
 )
 from flask_bcrypt import Bcrypt
-
 from app.extensions import db
 from app.models.user import User
 from app.models.role import Role
@@ -14,6 +13,10 @@ from app.models.household import Household
 from app.models.client import Client
 from app.models.account  import Account
 from app.models import Portfolio
+import secrets
+from datetime import datetime, timedelta
+
+from app.services.email_service import send_otp_email
 auth_bp = Blueprint("auth", __name__, url_prefix="/api/auth")
 
 bcrypt = Bcrypt()
@@ -59,14 +62,24 @@ def register():
     password_hash = bcrypt.generate_password_hash(
         password
     ).decode("utf-8")
+# Generate a secure 6-digit OTP
+    otp = str(secrets.randbelow(900000) + 100000)
 
+# Hash the OTP before storing it
+    otp_hash = bcrypt.generate_password_hash(otp).decode("utf-8")
+
+# OTP expires in 10 minutes
+    otp_expires_at = datetime.utcnow() + timedelta(minutes=10)
     # Create user
     new_user = User(
         username=username,
         email=email,
         password_hash=password_hash,
         role_id=role.id,
-        is_active=True
+        is_active=True,
+        email_verified=True,
+        otp_hash=otp_hash,
+        otp_expires_at=otp_expires_at
     )
 
     db.session.add(new_user)
@@ -113,7 +126,14 @@ def register():
 
     db.session.add(portfolio)
     db.session.commit()
-    db.session.commit()
+
+# Send OTP to the registered email
+    email_sent = send_otp_email(email, otp)
+
+    if not email_sent:
+      return jsonify({
+        "message": "Registration completed, but OTP email could not be sent"
+    }), 500
     return jsonify({
         "message": "Registration successful",
         "user_id": new_user.id
@@ -155,7 +175,10 @@ def login():
         return jsonify({
             "message": "Account is inactive"
         }), 403
-
+    #if not user.email_verified:
+      # return jsonify({
+       # "message": "Please verify your email before logging in"
+    #}), 403
     # Check password safely
     try:
         print("LOGIN EMAIL:", repr(email))
@@ -231,4 +254,54 @@ def get_current_user():
         "id": user.id,
         "username": user.username,
         "email": user.email
+    }), 200
+@auth_bp.route("/verify-otp", methods=["POST"])
+def verify_otp():
+
+    data = request.get_json() or {}
+
+    email = data.get("email")
+    otp = data.get("otp")
+
+    if not email or not otp:
+        return jsonify({
+            "message": "Email and OTP are required"
+        }), 400
+
+    user = User.query.filter_by(email=email).first()
+
+    if not user:
+        return jsonify({
+            "message": "User not found"
+        }), 404
+
+    if user.email_verified:
+        return jsonify({
+            "message": "Email is already verified"
+        }), 400
+
+    if not user.otp_hash or not user.otp_expires_at:
+        return jsonify({
+            "message": "OTP is invalid or unavailable"
+        }), 400
+
+    if datetime.utcnow() > user.otp_expires_at:
+        return jsonify({
+            "message": "OTP has expired"
+        }), 400
+
+    if not bcrypt.check_password_hash(user.otp_hash, str(otp)):
+        return jsonify({
+            "message": "Invalid OTP"
+        }), 400
+
+    user.email_verified = True
+    user.is_active = True
+    user.otp_hash = None
+    user.otp_expires_at = None
+
+    db.session.commit()
+
+    return jsonify({
+        "message": "Email verified successfully. You can now log in."
     }), 200

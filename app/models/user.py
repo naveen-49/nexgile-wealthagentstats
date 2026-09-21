@@ -36,7 +36,21 @@ class User(db.Model):
         default=True,
         nullable=False
     )
+    email_verified = db.Column(
+    db.Boolean,
+    default=False,
+    nullable=False
+)
 
+    otp_hash = db.Column(
+    db.String(255),
+    nullable=True
+)
+
+    otp_expires_at = db.Column(
+    db.DateTime,
+    nullable=True
+)
     created_at = db.Column(
         db.DateTime,
         default=datetime.utcnow,

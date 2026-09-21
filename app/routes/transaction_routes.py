@@ -66,7 +66,6 @@ def get_my_account():
 # =========================================================
 # CREATE TRANSACTION
 # =========================================================
-
 @transaction_bp.post("/")
 @role_required("CLIENT")
 def create_transaction():
@@ -86,6 +85,7 @@ def create_transaction():
 
     account_id = data.get("account_id")
     holding_id = data.get("holding_id")
+    symbol = data.get("symbol")
     transaction_type = data.get("transaction_type")
     quantity = data.get("quantity")
     price = data.get("price")
@@ -128,7 +128,7 @@ def create_transaction():
         }, 400
 
     # -----------------------------------------------------
-    # CHECK ACCOUNT BELONGS TO CLIENT
+    # CHECK ACCOUNT OWNERSHIP
     # -----------------------------------------------------
 
     account = Account.query.filter_by(
@@ -142,7 +142,7 @@ def create_transaction():
         }, 404
 
     # -----------------------------------------------------
-    # CONVERT NUMBERS TO DECIMAL
+    # CONVERT NUMBERS
     # -----------------------------------------------------
 
     try:
@@ -178,19 +178,43 @@ def create_transaction():
         }, 400
 
     # -----------------------------------------------------
-    # BUY / SELL VALIDATION
+    # BUY VALIDATION
     # -----------------------------------------------------
 
-    if transaction_type in {
-        "BUY",
-        "SELL"
-    }:
+    if transaction_type == "BUY":
+
+        if not symbol:
+            return {
+                "error": "symbol is required for BUY"
+            }, 400
+
+        if quantity is None or quantity <= 0:
+            return {
+                "error": (
+                    "quantity must be greater "
+                    "than 0"
+                )
+            }, 400
+
+        if price is None or price <= 0:
+            return {
+                "error": (
+                    "price must be greater "
+                    "than 0"
+                )
+            }, 400
+
+    # -----------------------------------------------------
+    # SELL VALIDATION
+    # -----------------------------------------------------
+
+    if transaction_type == "SELL":
 
         if not holding_id:
             return {
                 "error": (
                     "holding_id is required "
-                    "for BUY or SELL"
+                    "for SELL"
                 )
             }, 400
 
@@ -210,9 +234,11 @@ def create_transaction():
                 )
             }, 400
 
-        # -------------------------------------------------
-        # CHECK HOLDING
-        # -------------------------------------------------
+    # -----------------------------------------------------
+    # CHECK HOLDING
+    # -----------------------------------------------------
+
+    if holding_id:
 
         holding = Holding.query.filter_by(
             id=holding_id
@@ -222,10 +248,6 @@ def create_transaction():
             return {
                 "error": "Holding not found"
             }, 404
-
-        # -------------------------------------------------
-        # CHECK HOLDING BELONGS TO CLIENT
-        # -------------------------------------------------
 
         if holding.portfolio.client_id != client.id:
             return {
@@ -243,6 +265,7 @@ def create_transaction():
         transaction = process_transaction(
             account_id=account_id,
             holding_id=holding_id,
+            symbol=symbol,
             transaction_type=transaction_type,
             quantity=quantity,
             price=price,
@@ -266,8 +289,6 @@ def create_transaction():
         "message": "Transaction created",
         "transaction_id": transaction.id
     }, 201
-
-
 # =========================================================
 # GET TRANSACTIONS
 # =========================================================
