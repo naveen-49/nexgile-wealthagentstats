@@ -42,15 +42,7 @@ class User(db.Model):
     nullable=False
 )
 
-    otp_hash = db.Column(
-    db.String(255),
-    nullable=True
-)
-
-    otp_expires_at = db.Column(
-    db.DateTime,
-    nullable=True
-)
+   
     created_at = db.Column(
         db.DateTime,
         default=datetime.utcnow,
@@ -58,11 +50,11 @@ class User(db.Model):
     )
 
     updated_at = db.Column(
-        db.DateTime,
-        default=datetime.utcnow,
-        onupdate=datetime.utcnow,
-        nullable=False
-    )
+    db.DateTime,
+    default=datetime.utcnow,
+    onupdate=datetime.utcnow,
+    nullable=False
+)
 
     role = db.relationship(
         "Role",
