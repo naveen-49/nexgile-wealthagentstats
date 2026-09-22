@@ -12,7 +12,7 @@ from app.models.role import Role
 from app.models.household import Household
 from app.models.client import Client
 from app.models.account  import Account
-from app.models import Portfolio
+from app.models import Portfolio, RiskProfile
 
 auth_bp = Blueprint("auth", __name__, url_prefix="/api/auth")
 
@@ -91,6 +91,15 @@ def register():
 
     db.session.add(client)
     db.session.flush()
+
+    # Create a default risk profile until the user completes a risk assessment
+    risk_profile = RiskProfile(
+        client_id=client.id,
+        score=50,
+        category="MODERATE"
+    )
+
+    db.session.add(risk_profile)
 
     # Automatically create a default cash account
     account = Account(
