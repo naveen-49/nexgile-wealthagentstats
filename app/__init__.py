@@ -29,7 +29,8 @@ def create_app():
     "http://localhost:5174",
     "http://127.0.0.1:5174",
     "http://localhost:5500",
-    "http://127.0.0.1:5500"
+    "http://127.0.0.1:5500",
+    "https://wealthagent-frontend.onrender.com"
 ]
             }
         },
@@ -202,3 +203,5 @@ def create_app():
         }, 500
 
     return app
+
+
